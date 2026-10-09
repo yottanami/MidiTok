@@ -912,23 +912,22 @@ def get_score_ticks_per_beat(score: Score) -> np.ndarray:
     :param score: ``symusic.Score`` to analyze.
     :return: ticks per beat values as a numpy array.
     """
+    time_sigs = copy(score.time_signatures)
+    if len(time_sigs) == 0:
+        time_sigs.append(TimeSignature(0, *TIME_SIGNATURE))
     ticks_per_beat = [
         [
-            score.time_signatures[tsi + 1].time,
-            compute_ticks_per_beat(
-                score.time_signatures[tsi].denominator, score.ticks_per_quarter
-            ),
+            time_sigs[tsi + 1].time,
+            compute_ticks_per_beat(time_sigs[tsi].denominator, score.ticks_per_quarter),
         ]
-        for tsi in range(len(score.time_signatures) - 1)
+        for tsi in range(len(time_sigs) - 1)
     ]
 
     # Handles the last one up to the max tick of the Score
     ticks_per_beat.append(
         [
             score.end() + 1,
-            compute_ticks_per_beat(
-                score.time_signatures[-1].denominator, score.ticks_per_quarter
-            ),
+            compute_ticks_per_beat(time_sigs[-1].denominator, score.ticks_per_quarter),
         ]
     )
 

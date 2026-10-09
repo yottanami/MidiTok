@@ -17,6 +17,7 @@ from symusic import (
     Tempo,
     TextMeta,
     TimeSignature,
+    Track,
 )
 from symusic.core import NoteTickList
 
@@ -26,6 +27,7 @@ from miditok.constants import CLASS_OF_INST
 from miditok.utils import (
     get_bars_ticks,
     get_beats_ticks,
+    get_score_ticks_per_beat,
     merge_same_program_tracks,
     merge_tracks,
     merge_tracks_per_class,
@@ -419,6 +421,26 @@ def test_get_beats_ticks(
     score: Score, only_notes_onsets: bool, expected: list[int]
 ) -> None:
     assert get_beats_ticks(score, only_notes_onsets=only_notes_onsets) == expected
+
+
+def test_get_score_ticks_per_beat_without_time_signature() -> None:
+    # Without a time signature, 4/4 is assumed, as in get_bars_ticks/get_beats_ticks
+    def one_note_score() -> Score:
+        score = Score(480)
+        score.tracks.append(Track())
+        score.tracks[0].notes.append(Note(0, 480, 60, 100))
+        return score
+
+    score = one_note_score()
+    score_4_4 = one_note_score()
+    score_4_4.time_signatures.append(TimeSignature(0, 4, 4))
+
+    assert len(score.time_signatures) == 0
+    assert get_score_ticks_per_beat(score).tolist() == [[481, 480]]
+    assert (
+        get_score_ticks_per_beat(score).tolist()
+        == get_score_ticks_per_beat(score_4_4).tolist()
+    )
 
 
 @pytest.mark.parametrize("file_path", MIDI_PATHS_ONE_TRACK, ids=lambda p: p.name)
